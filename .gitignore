@@ -2,6 +2,9 @@
 /dist
 /node_modules
 
+# database
+ormconfig.json
+
 # Logs
 logs
 *.log

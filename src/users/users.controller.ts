@@ -1,15 +1,10 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from "@nestjs/common";
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/createUser.dto';
+import { RegisterUserDto } from '../auth/dto/registerUser.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
-
-  @Post()
-  createUser(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
 
   @Get()
   getUsers() {

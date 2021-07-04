@@ -1,9 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UserEntity } from './user.entity';
+import { UserEntity } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RegisterUserDto } from '../auth/dto/registerUser.dto';
-import * as bcrypt from 'bcrypt';
 import { deleteFields } from '../utils/deleteFields';
 
 @Injectable()
@@ -29,12 +28,11 @@ export class UsersService {
   }
 
   async create(registerUserDto: RegisterUserDto): Promise<UserEntity> {
-    registerUserDto.password = await bcrypt.hash(registerUserDto.password, 10);
     return await this.usersRepository.save(registerUserDto);
   }
 
-  async checkIfUserExists(name?: string, email?: string): Promise<UserEntity | undefined> {
-    return this.usersRepository.findOne({name, email});
+  async checkIfUserExists(email: string): Promise<UserEntity | undefined> {
+    return this.usersRepository.findOne({email});
   }
 
   async remove(id: number): Promise<void> {

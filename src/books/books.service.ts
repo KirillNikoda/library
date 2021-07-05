@@ -3,9 +3,9 @@ import { CreateBookDto } from './dto/createBook.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BookEntity } from './entities/book.entity';
 import { Repository } from 'typeorm';
-import { Request } from 'express';
 import { UsersService } from '../users/users.service';
 import { UserEntity } from '../users/entities/user.entity';
+import { RegisterUserDto } from "../auth/dto/registerUser.dto";
 
 @Injectable()
 export class BooksService {
@@ -15,16 +15,25 @@ export class BooksService {
     private usersService: UsersService,
   ) {}
 
-  async create(createBookDto: CreateBookDto) {
+  public async create(createBookDto: CreateBookDto): Promise<BookEntity> {
     try {
-      console.log('test');
       return this.booksRepository.save(createBookDto);
     } catch (e) {
       throw new HttpException('Book was not created', HttpStatus.BAD_REQUEST);
     }
+
   }
 
-  async borrow(req, bookId: number) {
+  public async getSubscription(user: Partial<UserEntity>): Promise<UserEntity> {
+    const fullUserInfo = await this.usersService.findOne(user.id)
+    if (fullUserInfo.hasSubscription) {
+      throw new HttpException("You already have a subscription", HttpStatus.BAD_REQUEST);
+    }
+    user.hasSubscription = true;
+    return this.usersService.create(user as RegisterUserDto);
+  }
+
+  public async borrow(req, bookId: number): Promise<void> {
     const [user, book] = await Promise.all([
       this.usersService.findOne(+req.user.id),
       this.booksRepository.findOne(bookId),

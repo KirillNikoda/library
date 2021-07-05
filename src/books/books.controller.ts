@@ -19,4 +19,10 @@ export class BooksController {
   borrowBook(@Req() req: Request, @Param('id',   ParseIntPipe) id: number) {
     return this.booksService.borrow(req, id);
   }
+
+  @Post("getSubscription")
+  @UseGuards(JwtAuthGuard)
+  getSubscription(@Req() req: Request) {
+    return this.booksService.getSubscription(req.user);
+  }
 }

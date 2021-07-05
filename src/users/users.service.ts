@@ -19,7 +19,7 @@ export class UsersService {
   }
 
   async findOne(id: number): Promise<UserEntity> {
-    const user = await this.usersRepository.findOne(id);
+    const user = await this.usersRepository.findOne(id, { relations: ["books"]});
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }

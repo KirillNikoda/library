@@ -32,6 +32,8 @@
 $ yarn 
 ```
 
+Add ormconfig.json file in the root of your project directory. In ormconfig-example.json you can see an example of how the file should look like.
+
 ## Running the app
 
 ```bash

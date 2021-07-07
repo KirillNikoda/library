@@ -1,18 +1,24 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { CreateBookDto } from './dto/createBook.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BookEntity } from './entities/book.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { UserEntity } from '../users/entities/user.entity';
-import { RegisterUserDto } from "../auth/dto/registerUser.dto";
+import { RegisterUserDto } from '../auth/dto/registerUser.dto';
 
 @Injectable()
 export class BooksService {
   constructor(
     @InjectRepository(BookEntity)
     private booksRepository: Repository<BookEntity>,
-    private usersService: UsersService,
+    @Inject(forwardRef(() => UsersService)) private usersService: UsersService,
   ) {}
 
   public async create(createBookDto: CreateBookDto): Promise<BookEntity> {
@@ -21,16 +27,18 @@ export class BooksService {
     } catch (e) {
       throw new HttpException('Book was not created', HttpStatus.BAD_REQUEST);
     }
-
   }
 
   public async getSubscription(user: Partial<UserEntity>): Promise<UserEntity> {
-    const fullUserInfo = await this.usersService.findOne(user.id)
+    const fullUserInfo = await this.usersService.findOne(user.id);
     if (fullUserInfo.hasSubscription) {
-      throw new HttpException("You already have a subscription", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'You already have a subscription',
+        HttpStatus.BAD_REQUEST,
+      );
     }
     user.hasSubscription = true;
-    return this.usersService.create(user as RegisterUserDto);
+    return await this.usersService.create(user as RegisterUserDto);
   }
 
   public async borrow(req, bookId: number): Promise<void> {
@@ -50,7 +58,7 @@ export class BooksService {
       );
     } else if (book.isBusy) {
       throw new HttpException(
-        "This book is already taken",
+        'This book is already taken',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -60,5 +68,19 @@ export class BooksService {
     user.books.push(book);
     user.borrowedBooksAmount += 1;
     await this.usersService.create(user);
+  }
+
+  public async returnBook(user: Partial<UserEntity>, id: number) {
+    const book = (await this.booksRepository.findOne(id, {relations: ["user"]})) as any;
+    if (+user.id !== +book.user.id) {
+      throw new HttpException(
+        'You are not able to return this book',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    book.user = null;
+    book.isBusy = false;
+    await this.booksRepository.save(book);
   }
 }

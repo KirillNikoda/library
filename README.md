@@ -35,10 +35,8 @@ $ yarn
 ## Running the app
 
 ```bash
-# development
-$ yarn dev
 
-# watch mode
+# development watch mode
 $ yarn start:dev
 
 # production mode
